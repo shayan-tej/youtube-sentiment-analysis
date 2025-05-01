@@ -7,13 +7,15 @@ import pandas as pd
 from urllib.parse import urlparse, parse_qs
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
 
 # Configuration
-MAX_COMMENTS = 100
 YT_API_KEY = os.getenv('YT_API_KEY')
+MAX_COMMENTS = 100
 
 def clean_text(text):
     """Clean text for sentiment analysis"""
@@ -33,13 +35,15 @@ def analyze_sentiment(text):
     }
 
 def extract_video_id(url):
-    """Extract video ID from URL with multiple fallbacks"""
+    """Extract video ID while ignoring playlist parameters"""
+    # Strip all parameters after the video ID
+    clean_url = url.split('&')[0]  # Removes &list=... and other params
     patterns = [
-        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/)([\w-]{11})',
+        r'(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})',
         r'(?:embed/|v/|watch\?v=)([\w-]{11})'
     ]
     for pattern in patterns:
-        match = re.search(pattern, url)
+        match = re.search(pattern, clean_url)
         if match:
             return match.group(1)
     return None
